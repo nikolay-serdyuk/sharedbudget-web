@@ -1,6 +1,24 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.11'
+buildscript {
+    ext {
+        kotlinVersion = '1.3.11'
+        springBootVersion = '2.1.3.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+    }
+
 }
+
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-spring'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'war'
 
 group 'com.nserdyuk'
 version '1.0-SNAPSHOT'
@@ -11,6 +29,10 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile "org.springframework.boot:spring-boot-starter-jersey"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+    compile "org.jetbrains.kotlin:kotlin-reflect"
 }
 
 compileKotlin {
