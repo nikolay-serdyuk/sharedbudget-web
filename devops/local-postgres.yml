@@ -1,0 +1,11 @@
+version: "2.3"
+services:
+  postgres:
+    image: postgres:11
+    hostname: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: sharedbudget
+      POSTGRES_USER: SHAREDBUDGET
+      POSTGRES_PASSWORD: SHAREDBUDGET

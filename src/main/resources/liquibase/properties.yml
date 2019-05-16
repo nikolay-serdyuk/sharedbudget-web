@@ -1,0 +1,96 @@
+databaseChangeLog:
+  - property:
+      name: autoIncrement
+      value: true
+      dbms: postgresql
+  - property:
+      name: autoIncrement
+      value: true
+      dbms: h2
+  - property:
+      name: autoIncrement
+      value: true
+      dbms: oracle
+
+  # primary keys
+  - property:
+      name: bigint.type
+      value: number(19,0)
+      dbms: oracle
+  - property:
+      name: bigint.type
+      value: bigint
+      dbms: postgresql
+  - property:
+      name: bigint.type
+      value: BIGINT
+      dbms: h2
+
+  # boolean
+  - property:
+      name: boolean.type
+      value: number(1,0)
+      dbms: oracle
+  - property:
+      name: boolean.type
+      value: boolean
+      dbms: postgresql
+  - property:
+      name: boolean.type
+      value: BOOLEAN
+      dbms: h2
+
+  # sequence
+  - property:
+      name: sequence.max-size
+      value: 9223372036854775807
+
+  # label
+  - property:
+      name: label.type
+      value: varchar(255)
+
+  # serial columns
+  - property:
+      name: serial.type
+      value: bigserial
+      dbms: postgresql
+  - property:
+      name: serial.type
+      value: number(19,0)
+      dbms: oracle
+  - property:
+      name: serial.type
+      value: bigint
+      dbms: h2
+
+  # user
+  - property:
+      name: user.type
+      value: varchar(70)
+
+  # text
+  - property:
+      name: text.type
+      value: text
+      dbms: postgresql
+  - property:
+      name: text.type
+      value: clob
+      dbms: oracle
+  - property:
+      name: text.type
+      value: clob
+      dbms: h2
+
+  - property:
+      name: comment.type
+      value: varchar(2000)
+
+  - property:
+      name: datetime.type
+      value: timestamp with time zone
+
+  - property:
+      name: uuid.string
+      value: char(36)

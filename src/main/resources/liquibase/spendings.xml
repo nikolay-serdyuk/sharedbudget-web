@@ -1,0 +1,45 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <include file="properties.yml" relativeToChangelogFile="true"/>
+
+    <changeSet author="${author}" id="spendings-01">
+        <createTable tableName="SPENDINGS">
+            <column name="ACCOUNT_ID" type="${bigint.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UUID" type="${uuid.string}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="AMOUNT" type="${bigint.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COMMENT" type="${comment.type}">
+            </column>
+            <column name="EXPENSE_UUID" type="${uuid.string}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DELETED" type="${boolean.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="${user.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="${datetime.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIED_BY" type="${user.type}">
+            </column>
+            <column name="MODIFIED_DATE" type="${datetime.type}">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="${author}" id="spendings-02">
+        <addPrimaryKey tableName="SPENDINGS" columnNames="ACCOUNT_ID, UUID" constraintName="SPENDINGS_PK"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,48 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <include file="properties.yml" relativeToChangelogFile="true"/>
+
+    <changeSet author="${author}" id="expenses-01">
+        <createTable tableName="EXPENSES">
+            <column name="ACCOUNT_ID" type="${bigint.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UUID" type="${uuid.string}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CATEGORY_UUID" type="${uuid.string}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION_UUID" type="${uuid.string}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="AMOUNT" type="${bigint.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CLOSED_DATE" type="${datetime.type}">
+            </column>
+            <column name="SERVER_VERSION" type="${bigint.type}" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="${user.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="${datetime.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIED_BY" type="${user.type}">
+            </column>
+            <column name="MODIFIED_DATE" type="${datetime.type}">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="${author}" id="expenses-02">
+        <addPrimaryKey tableName="EXPENSES" columnNames="ACCOUNT_ID, UUID" constraintName="EXPENSES_PK"/>
+    </changeSet>
+
+</databaseChangeLog>
