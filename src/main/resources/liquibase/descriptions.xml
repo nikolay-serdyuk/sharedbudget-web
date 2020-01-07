@@ -21,11 +21,11 @@
     </changeSet>
 
     <changeSet author="${author}" id="descriptions-02">
-        <addPrimaryKey tableName="DESCRIPTIONS" columnNames="ACCOUNT_ID, UUID" constraintName="DESCRIPTIONS_PK"/>
+        <addPrimaryKey columnNames="ACCOUNT_ID, UUID" constraintName="DESCRIPTIONS_PK" tableName="DESCRIPTIONS"/>
     </changeSet>
 
     <changeSet author="${author}" id="descriptions-03">
-        <addUniqueConstraint columnNames="UUID" constraintName="DESCRIPTIONS_UC" tableName="DESCRIPTIONS"/>
+        <addUniqueConstraint columnNames="ACCOUNT_ID, UUID" constraintName="DESCRIPTIONS_UC" tableName="DESCRIPTIONS"/>
     </changeSet>
 
 </databaseChangeLog>

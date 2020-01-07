@@ -9,18 +9,18 @@
     <changeSet author="${author}" id="expenses-fk-01">
         <addForeignKeyConstraint
                 constraintName="EXPENSES_CATEGORIES_FK"
-                baseColumnNames="CATEGORY_UUID"
+                baseColumnNames="ACCOUNT_ID, CATEGORY_UUID"
                 baseTableName="EXPENSES"
-                referencedColumnNames="UUID"
+                referencedColumnNames="ACCOUNT_ID, UUID"
                 referencedTableName="CATEGORIES"/>
     </changeSet>
 
     <changeSet author="${author}" id="expenses-fk-02">
         <addForeignKeyConstraint
                 constraintName="EXPENSES_DESCRIPTIONS_FK"
-                baseColumnNames="DESCRIPTION_UUID"
+                baseColumnNames="ACCOUNT_ID, DESCRIPTION_UUID"
                 baseTableName="EXPENSES"
-                referencedColumnNames="UUID"
+                referencedColumnNames="ACCOUNT_ID, UUID"
                 referencedTableName="DESCRIPTIONS"/>
     </changeSet>
 

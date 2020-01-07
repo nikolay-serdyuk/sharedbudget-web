@@ -38,11 +38,22 @@
             </column>
             <column name="MODIFIED_DATE" type="${datetime.type}">
             </column>
+            <column name="DELETED_AFTER_MERGE" type="${boolean.type}">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
     <changeSet author="${author}" id="expenses-02">
-        <addPrimaryKey tableName="EXPENSES" columnNames="ACCOUNT_ID, UUID" constraintName="EXPENSES_PK"/>
+        <addPrimaryKey columnNames="ACCOUNT_ID, UUID" constraintName="EXPENSES_PK" tableName="EXPENSES"/>
+    </changeSet>
+
+    <changeSet author="${author}" id="expenses-03">
+        <addUniqueConstraint
+                columnNames="ACCOUNT_ID, DESCRIPTION_UUID"
+                constraintName="EXPENSES_UC"
+                tableName="EXPENSES"
+        />
     </changeSet>
 
 </databaseChangeLog>

@@ -39,7 +39,7 @@
     </changeSet>
 
     <changeSet author="${author}" id="spendings-02">
-        <addPrimaryKey tableName="SPENDINGS" columnNames="ACCOUNT_ID, UUID" constraintName="SPENDINGS_PK"/>
+        <addPrimaryKey columnNames="ACCOUNT_ID, UUID" constraintName="SPENDINGS_PK" tableName="SPENDINGS"/>
     </changeSet>
 
 </databaseChangeLog>

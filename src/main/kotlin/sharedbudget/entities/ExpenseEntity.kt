@@ -18,5 +18,6 @@ data class ExpenseEntity(
     val createdDate: Instant,
     val modifiedBy: String? = null,
     val modifiedDate: Instant? = null,
-    val spendings: MutableSet<SpendingEntity>
+    val spendings: MutableSet<SpendingEntity>,
+    val deletedAfterMerge: Boolean
 )
