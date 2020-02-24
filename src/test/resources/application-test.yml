@@ -1,0 +1,7 @@
+logging:
+  level:
+    org.springframework.jdbc.core: debug
+    org.hibernate.type.descriptor.sql: debug
+    org.hibernate.SQL: debug
+    org.hibernate.stat: debug
+    org.hibernate.cache: debug

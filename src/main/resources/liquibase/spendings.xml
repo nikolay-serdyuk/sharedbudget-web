@@ -8,7 +8,7 @@
 
     <changeSet author="${author}" id="spendings-01">
         <createTable tableName="SPENDINGS">
-            <column name="ACCOUNT_ID" type="${bigint.type}">
+            <column name="ACCOUNT_ID" type="${account.string}">
                 <constraints nullable="false"/>
             </column>
             <column name="UUID" type="${uuid.string}">
@@ -30,10 +30,6 @@
             </column>
             <column name="CREATED_DATE" type="${datetime.type}">
                 <constraints nullable="false"/>
-            </column>
-            <column name="MODIFIED_BY" type="${user.type}">
-            </column>
-            <column name="MODIFIED_DATE" type="${datetime.type}">
             </column>
         </createTable>
     </changeSet>

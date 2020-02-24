@@ -6,8 +6,10 @@ spring:
     enabled: true
 
   jpa:
+    generate-ddl: false
     properties:
       hibernate:
+        ddl-auto: none
         format_sql: true
         jdbc:
           lob.non_contextual_creation: true

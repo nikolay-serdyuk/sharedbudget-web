@@ -8,7 +8,7 @@
 
     <changeSet author="${author}" id="expenses-01">
         <createTable tableName="EXPENSES">
-            <column name="ACCOUNT_ID" type="${bigint.type}">
+            <column name="ACCOUNT_ID" type="${account.string}">
                 <constraints nullable="false"/>
             </column>
             <column name="UUID" type="${uuid.string}">

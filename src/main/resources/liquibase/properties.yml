@@ -94,3 +94,7 @@ databaseChangeLog:
   - property:
       name: uuid.string
       value: char(36)
+
+  - property:
+      name: account.string
+      value: char(16)
