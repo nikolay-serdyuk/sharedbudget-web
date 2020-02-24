@@ -14,16 +14,19 @@
             <column name="UUID" type="${uuid.string}">
                 <constraints nullable="false"/>
             </column>
-            <column name="CATEGORY_UUID" type="${uuid.string}">
+            <column name="CATEGORY" type="${label.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="DESCRIPTION_UUID" type="${uuid.string}">
+            <column name="DESCRIPTION" type="${label.type}">
                 <constraints nullable="false"/>
             </column>
             <column name="AMOUNT" type="${bigint.type}">
                 <constraints nullable="false"/>
             </column>
             <column name="CLOSED_DATE" type="${datetime.type}">
+            </column>
+            <column name="DELETED" type="${boolean.type}">
+                <constraints nullable="false"/>
             </column>
             <column name="SERVER_VERSION" type="${bigint.type}" defaultValueNumeric="1">
                 <constraints nullable="false"/>
@@ -38,22 +41,11 @@
             </column>
             <column name="MODIFIED_DATE" type="${datetime.type}">
             </column>
-            <column name="DELETED_AFTER_MERGE" type="${boolean.type}">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
     </changeSet>
 
     <changeSet author="${author}" id="expenses-02">
         <addPrimaryKey columnNames="ACCOUNT_ID, UUID" constraintName="EXPENSES_PK" tableName="EXPENSES"/>
-    </changeSet>
-
-    <changeSet author="${author}" id="expenses-03">
-        <addUniqueConstraint
-                columnNames="ACCOUNT_ID, DESCRIPTION_UUID"
-                constraintName="EXPENSES_UC"
-                tableName="EXPENSES"
-        />
     </changeSet>
 
 </databaseChangeLog>

@@ -1,0 +1,18 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <include file="properties.yml" relativeToChangelogFile="true"/>
+
+    <changeSet author="${author}" id="spendings-fk-01">
+        <addForeignKeyConstraint
+                constraintName="SPENDINGS_EXPENSES_FK"
+                baseColumnNames="ACCOUNT_ID, EXPENSE_UUID"
+                baseTableName="SPENDINGS"
+                referencedColumnNames="ACCOUNT_ID, UUID"
+                referencedTableName="EXPENSES"/>
+    </changeSet>
+
+</databaseChangeLog>

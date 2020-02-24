@@ -9,7 +9,7 @@ class SpendingEntity(
     val amount: Long,
     val comment: String? = null,
     val expenseUuid: UUID,
-    val deleted: Boolean,
+    var deleted: Boolean,
     val createdBy: String,
     val createdDate: Instant
 )
