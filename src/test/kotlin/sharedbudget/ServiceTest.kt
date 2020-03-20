@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
-import sharedbudget.entities.ExpenseDto
-import sharedbudget.entities.ExpenseEntity
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
@@ -32,26 +30,6 @@ class ServiceTest @Autowired constructor(
         outputExpense1.assertIsEqualTo(inputExpense1)
         val outputExpense2 = outputExpenseMap.getValue(inputExpense2.uuid)
         outputExpense2.assertIsEqualTo(inputExpense2)
-    }
-
-    private fun ExpenseEntity.assertIsEqualTo(expenseDto: ExpenseDto) {
-        val assert = ExpenseEntityAssert.assertThat(this)
-            .hasUuid(expenseDto.uuid)
-            .hasDescription(expenseDto.description)
-            .hasCategory(expenseDto.category)
-            .hasAmount(expenseDto.amount)
-            .hasDeleted(expenseDto.deleted)
-
-        expenseDto.spendings
-            .associateBy { it.uuid }
-            .forEach { (key, spendingDto) ->
-                assert.getSpending(key) {
-                    this.hasUuid(spendingDto.uuid)
-                        .hasAmount(spendingDto.amount)
-                        .hasComment(spendingDto.comment)
-                        .hasDeleted(spendingDto.deleted)
-                }
-            }
     }
 
     private fun generateExpenseDto() = expenseDto {

@@ -1,12 +1,14 @@
 package sharedbudget
 
 import org.assertj.core.api.AbstractObjectAssert
+import sharedbudget.entities.ExpenseDto
 import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.SpendingEntity
 import kotlin.reflect.KProperty1
 
 class SpendingEntityAssert(spendingEntity: SpendingEntity) :
     AbstractObjectAssert<SpendingEntityAssert, SpendingEntity>(spendingEntity, SpendingEntityAssert::class.java) {
+    val uuid = spendingEntity.uuid
 
     fun hasUuid(uuid: String) = apply { hasFieldOrPropertyWithValue(SpendingEntity::uuid, uuid) }
     fun hasAmount(amount: Long) = apply { hasFieldOrPropertyWithValue(SpendingEntity::amount, amount) }
@@ -28,13 +30,34 @@ class ExpenseEntityAssert(expenseEntity: ExpenseEntity) :
     fun hasCategory(category: String) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::category, category) }
     fun hasAmount(amount: Long) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::amount, amount) }
     fun hasDeleted(deleted: Boolean) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::deleted, deleted) }
-    fun getSpending(uuid: String, block: SpendingEntityAssert.() -> Unit) = apply {
-        block(SpendingEntityAssert.assertThat(actual.spendings.associateBy { it.uuid }.getValue(uuid)))
+    fun onEachSpending(block: SpendingEntityAssert.() -> Unit) = apply {
+        actual.spendings.onEach {
+            block(SpendingEntityAssert.assertThat(it))
+        }
     }
 
     companion object {
         fun assertThat(expenseEntity: ExpenseEntity) = ExpenseEntityAssert(expenseEntity)
     }
+}
+
+fun ExpenseEntity.assertIsEqualTo(expenseDto: ExpenseDto) {
+    val spendingsMap = expenseDto.spendings
+        .associateBy { it.uuid }
+
+    ExpenseEntityAssert.assertThat(this)
+        .hasUuid(expenseDto.uuid)
+        .hasDescription(expenseDto.description)
+        .hasCategory(expenseDto.category)
+        .hasAmount(expenseDto.amount)
+        .hasDeleted(expenseDto.deleted)
+        .onEachSpending {
+            val spendingDto = spendingsMap.getValue(uuid)
+            this.hasUuid(spendingDto.uuid)
+                .hasAmount(spendingDto.amount)
+                .hasComment(spendingDto.comment)
+                .hasDeleted(spendingDto.deleted)
+        }
 }
 
 private fun AbstractObjectAssert<*, *>.hasFieldOrPropertyWithValue(property: KProperty1<*, *>, value: Any?) =
