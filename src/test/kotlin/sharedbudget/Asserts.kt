@@ -30,10 +30,8 @@ class ExpenseEntityAssert(expenseEntity: ExpenseEntity) :
     fun hasCategory(category: String) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::category, category) }
     fun hasAmount(amount: Long) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::amount, amount) }
     fun hasDeleted(deleted: Boolean) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::deleted, deleted) }
-    fun onEachSpending(block: SpendingEntityAssert.() -> Unit) = apply {
-        actual.spendings.onEach {
-            block(SpendingEntityAssert.assertThat(it))
-        }
+    fun onEachSpending(block: (Map.Entry<String, SpendingEntityAssert>) -> Unit) = apply {
+        actual.spendings.associateBy({ it.uuid }, { SpendingEntityAssert.assertThat(it) }).onEach { block(it) }
     }
 
     companion object {
@@ -51,9 +49,9 @@ fun ExpenseEntity.assertIsEqualTo(expenseDto: ExpenseDto) {
         .hasCategory(expenseDto.category)
         .hasAmount(expenseDto.amount)
         .hasDeleted(expenseDto.deleted)
-        .onEachSpending {
+        .onEachSpending { (uuid, spendingEntityAssert) ->
             val spendingDto = spendingsMap.getValue(uuid)
-            this.hasUuid(spendingDto.uuid)
+            spendingEntityAssert.hasUuid(spendingDto.uuid)
                 .hasAmount(spendingDto.amount)
                 .hasComment(spendingDto.comment)
                 .hasDeleted(spendingDto.deleted)

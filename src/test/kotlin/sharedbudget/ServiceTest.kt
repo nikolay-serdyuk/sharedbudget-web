@@ -33,9 +33,7 @@ class ServiceTest @Autowired constructor(
     }
 
     private fun generateExpenseDto() = expenseDto {
-        spendings = mutableSetOf(
-            spendingDto {},
-            spendingDto {}
-        )
+        +spendingDto {}
+        +spendingDto {}
     }
 }
