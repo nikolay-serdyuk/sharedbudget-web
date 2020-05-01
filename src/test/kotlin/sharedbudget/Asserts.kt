@@ -1,14 +1,14 @@
 package sharedbudget
 
 import org.assertj.core.api.AbstractObjectAssert
-import sharedbudget.entities.ExpenseDto
 import sharedbudget.entities.ExpenseEntity
+import sharedbudget.entities.ExpenseInterface
 import sharedbudget.entities.SpendingEntity
+import java.time.Instant
 import kotlin.reflect.KProperty1
 
 class SpendingEntityAssert(spendingEntity: SpendingEntity) :
     AbstractObjectAssert<SpendingEntityAssert, SpendingEntity>(spendingEntity, SpendingEntityAssert::class.java) {
-    val uuid = spendingEntity.uuid
 
     fun hasUuid(uuid: String) = apply { hasFieldOrPropertyWithValue(SpendingEntity::uuid, uuid) }
     fun hasAmount(amount: Long) = apply { hasFieldOrPropertyWithValue(SpendingEntity::amount, amount) }
@@ -33,28 +33,36 @@ class ExpenseEntityAssert(expenseEntity: ExpenseEntity) :
     fun onEachSpending(block: (Map.Entry<String, SpendingEntityAssert>) -> Unit) = apply {
         actual.spendings.associateBy({ it.uuid }, { SpendingEntityAssert.assertThat(it) }).onEach { block(it) }
     }
+    fun hasVersion(serverVersion: Long)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::serverVersion, serverVersion) }
+    fun hasCreatedBy(createdBy: String)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdBy, createdBy) }
+    fun hasCreatedDate(createdDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdDate, createdDate) }
+    fun hasModifiedBy(modifiedBy: String?)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedBy, modifiedBy) }
+    fun hasModifiedDate(modifiedDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedDate, modifiedDate) }
+    fun hasClosedDate(closedDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::closedDate, closedDate) }
 
     companion object {
         fun assertThat(expenseEntity: ExpenseEntity) = ExpenseEntityAssert(expenseEntity)
     }
 }
 
-fun ExpenseEntity.assertIsEqualTo(expenseDto: ExpenseDto) {
-    val spendingsMap = expenseDto.spendings
+fun ExpenseEntity.assertEqualTo(other: ExpenseInterface<*>) {
+    assert(spendings.size == other.spendings.size)
+
+    val otherSpendingsMap = other.spendings
         .associateBy { it.uuid }
 
     ExpenseEntityAssert.assertThat(this)
-        .hasUuid(expenseDto.uuid)
-        .hasDescription(expenseDto.description)
-        .hasCategory(expenseDto.category)
-        .hasAmount(expenseDto.amount)
-        .hasDeleted(expenseDto.deleted)
+        .hasUuid(other.uuid)
+        .hasDescription(other.description)
+        .hasCategory(other.category)
+        .hasAmount(other.amount)
+        .hasDeleted(other.deleted)
         .onEachSpending { (uuid, spendingEntityAssert) ->
-            val spendingDto = spendingsMap.getValue(uuid)
-            spendingEntityAssert.hasUuid(spendingDto.uuid)
-                .hasAmount(spendingDto.amount)
-                .hasComment(spendingDto.comment)
-                .hasDeleted(spendingDto.deleted)
+            val otherSpending = otherSpendingsMap.getValue(uuid)
+            spendingEntityAssert.hasUuid(otherSpending.uuid)
+                .hasAmount(otherSpending.amount)
+                .hasComment(otherSpending.comment)
+                .hasDeleted(otherSpending.deleted)
         }
 }
 

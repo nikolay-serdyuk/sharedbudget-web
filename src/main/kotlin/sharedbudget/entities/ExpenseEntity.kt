@@ -4,12 +4,13 @@ import java.time.Instant
 import java.util.*
 import javax.persistence.CascadeType
 import javax.persistence.Entity
+import javax.persistence.FetchType
 import javax.persistence.Id
 import javax.persistence.IdClass
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
-interface ExpenseInterface<T: SpendingInterface> {
+interface ExpenseInterface<T : SpendingInterface> {
     val uuid: String
     val description: String
     val category: String
@@ -25,7 +26,26 @@ data class ExpenseDto(
     override val amount: Long,
     override val spendings: MutableSet<SpendingDto>,
     override val deleted: Boolean
-) : ExpenseInterface<SpendingDto>
+) : ExpenseInterface<SpendingDto> {
+
+    fun toExpenseEntity(accountId: String, userId: String, serverVersion: Long, createdDate: Instant) =
+        ExpenseEntity(
+            accountId = accountId,
+            uuid = uuid,
+            description = description,
+            category = category,
+            amount = amount,
+            closedDate = null,
+            spendings = mutableSetOf(),
+            deleted = false,
+            serverVersion = serverVersion,
+            createdBy = userId,
+            createdDate = createdDate,
+            modifiedBy = null,
+            modifiedDate = null
+        )
+
+}
 
 @Entity
 @Table(name = "EXPENSES")
@@ -44,9 +64,9 @@ class ExpenseEntity(
 
     override var amount: Long,
 
-    var closedDate: Date?,
+    var closedDate: Instant?,
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "owner")
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "owner", fetch = FetchType.EAGER)
     override val spendings: MutableSet<SpendingEntity> = mutableSetOf(),
 
     override var deleted: Boolean,

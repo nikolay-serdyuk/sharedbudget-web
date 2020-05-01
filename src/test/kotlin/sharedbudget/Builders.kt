@@ -53,8 +53,8 @@ fun expenseDto(init: ExpenseDtoBuilder.() -> Unit): ExpenseDto {
     return builder.build()
 }
 
-private fun randomString() = UUID.randomUUID().toString()
-private fun randomLong(from: Long, until: Long) = Random.nextLong(from = from, until = until)
+fun randomString() = UUID.randomUUID().toString()
+fun randomLong(from: Long, until: Long) = Random.nextLong(from = from, until = until)
 
 private const val MIN_EXPENSE_AMOUNT = 1000L
 private const val MAX_EXPENSE_AMOUNT = 10 * MIN_EXPENSE_AMOUNT

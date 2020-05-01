@@ -38,4 +38,10 @@
         <addPrimaryKey columnNames="ACCOUNT_ID, UUID" constraintName="SPENDINGS_PK" tableName="SPENDINGS"/>
     </changeSet>
 
+    <changeSet author="${author}" id="spendings-03">
+        <sql>
+            ALTER TABLE SPENDINGS ADD CONSTRAINT SPENDINGS_POSITIVE_AMOUNT CHECK (AMOUNT > 0);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
