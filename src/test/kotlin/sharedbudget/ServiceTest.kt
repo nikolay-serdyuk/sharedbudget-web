@@ -6,12 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
+import com.github.javafaker.Faker
+
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 class ServiceTest @Autowired constructor(
     private val service: Service, private val jdbcTemplate: JdbcTemplate
 ) {
+    private val faker = Faker()
 
     @BeforeEach
     fun beforeEach() {
@@ -33,7 +36,13 @@ class ServiceTest @Autowired constructor(
     }
 
     private fun generateExpenseDto() = expenseDto {
-        +spendingDto {}
-        +spendingDto {}
+        category = faker.commerce().productName()
+        description = faker.hobbit().quote()
+        +spendingDto {
+            comment = faker.hitchhikersGuideToTheGalaxy().quote()
+        }
+        +spendingDto {
+            comment = faker.hitchhikersGuideToTheGalaxy().quote()
+        }
     }
 }
