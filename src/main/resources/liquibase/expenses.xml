@@ -49,25 +49,18 @@
     </changeSet>
 
     <changeSet author="${author}" id="expenses-03">
-        <addUniqueConstraint
-                columnNames="ACCOUNT_ID, DESCRIPTION, CREATED_DATE"
-                constraintName="UNIQUE_DESCRIPTION"
-                tableName="EXPENSES"/>
-    </changeSet>
-
-    <changeSet author="${author}" id="expenses-04">
         <sql>
             ALTER TABLE EXPENSES ADD CONSTRAINT EXPENSES_POSITIVE_AMOUNT CHECK (AMOUNT > 0);
         </sql>
     </changeSet>
 
-    <changeSet author="${author}" id="expenses-05">
+    <changeSet author="${author}" id="expenses-04">
         <sql>
             ALTER TABLE EXPENSES ADD CONSTRAINT EXPENSES_NOT_BLANK_DESCRIPTION CHECK (DESCRIPTION != '');
         </sql>
     </changeSet>
 
-    <changeSet author="${author}" id="expenses-06">
+    <changeSet author="${author}" id="expenses-05">
         <sql>
             ALTER TABLE EXPENSES ADD CONSTRAINT EXPENSES_NOT_BLANK_CATEGORY CHECK (CATEGORY != '');
         </sql>

@@ -26,14 +26,14 @@ data class SpendingDto(
     override val deleted: Boolean
 ) : SpendingInterface {
 
-    fun toSpendingEntity(owner: ExpenseEntity) = SpendingEntity(
+    fun toSpendingEntity(owner: ExpenseEntity, deleted: Boolean = false) = SpendingEntity(
         owner = owner,
         uuid = uuid,
         amount = amount,
         comment = comment,
         createdDate = Utils.firstDayOfMonth(),
         createdBy = owner.createdBy,
-        deleted = deleted
+        deleted = this.deleted or deleted
     )
 }
 

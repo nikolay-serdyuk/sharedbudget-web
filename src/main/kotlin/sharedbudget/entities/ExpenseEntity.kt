@@ -1,7 +1,6 @@
 package sharedbudget.entities
 
 import java.time.Instant
-import java.util.*
 import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.FetchType
@@ -37,7 +36,7 @@ data class ExpenseDto(
             amount = amount,
             closedDate = null,
             spendings = mutableSetOf(),
-            deleted = false,
+            deleted = deleted,
             serverVersion = serverVersion,
             createdBy = userId,
             createdDate = createdDate,

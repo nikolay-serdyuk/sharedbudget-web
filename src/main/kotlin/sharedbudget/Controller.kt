@@ -18,6 +18,6 @@ class Controller(private val service: Service) {
     @PostMapping
     fun postExpenses(
         @RequestParam(value = "expenses", required = true)
-        expenses: Iterable<ExpenseDto>
+        expenses: Collection<ExpenseDto>
     ) = service.postExpenses(expenses)
 }

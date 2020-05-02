@@ -17,11 +17,11 @@ fun <T> where(makePredicate: CriteriaBuilder.(Root<T>) -> Predicate): Specificat
     Specification { root, _, criteriaBuilder -> criteriaBuilder.makePredicate(root) }
 
 // helper function for defining Specification that take a Path to a property and send it to a CriteriaBuilder
-private fun <T, R> KProperty1<T, R?>.spec(makePredicate: CriteriaBuilder.(path: Path<R>) -> Predicate): Specification<T> =
+private fun <T, R> KProperty1<T, R>.spec(makePredicate: CriteriaBuilder.(path: Path<R>) -> Predicate): Specification<T> =
     let { property -> where { root -> makePredicate(root.get(property)) } }
 
 // Equality
-fun <T, R> KProperty1<T, R?>.equal(x: R): Specification<T> = spec { equal(it, x) }
+fun <T, R> KProperty1<T, R>.equal(x: R): Specification<T> = spec { equal(it, x) }
 
 fun <T, R> KProperty1<T, R?>.notEqual(x: R): Specification<T> = spec { notEqual(it, x) }
 
@@ -36,11 +36,11 @@ fun <T> KProperty1<T, Number?>.le(x: Number) = spec { le(it, x) }
 fun <T> KProperty1<T, Number?>.lt(x: Number) = spec { lt(it, x) }
 fun <T> KProperty1<T, Number?>.ge(x: Number) = spec { ge(it, x) }
 fun <T> KProperty1<T, Number?>.gt(x: Number) = spec { gt(it, x) }
-fun <T, R : Comparable<R>> KProperty1<T, R?>.lessThan(x: R) = spec { lessThan(it, x) }
-fun <T, R : Comparable<R>> KProperty1<T, R?>.lessThanOrEqualTo(x: R) = spec { lessThanOrEqualTo(it, x) }
-fun <T, R : Comparable<R>> KProperty1<T, R?>.greaterThan(x: R) = spec { greaterThan(it, x) }
-fun <T, R : Comparable<R>> KProperty1<T, R?>.greaterThanOrEqualTo(x: R) = spec { greaterThanOrEqualTo(it, x) }
-fun <T, R : Comparable<R>> KProperty1<T, R?>.between(x: R, y: R) = spec { between(it, x, y) }
+fun <T, R : Comparable<R>> KProperty1<T, R>.lessThan(x: R) = spec { lessThan(it, x) }
+fun <T, R : Comparable<R>> KProperty1<T, R>.lessThanOrEqualTo(x: R) = spec { lessThanOrEqualTo(it, x) }
+fun <T, R : Comparable<R>> KProperty1<T, R>.greaterThan(x: R) = spec { greaterThan(it, x) }
+fun <T, R : Comparable<R>> KProperty1<T, R>.greaterThanOrEqualTo(x: R) = spec { greaterThanOrEqualTo(it, x) }
+fun <T, R : Comparable<R>> KProperty1<T, R>.between(x: R, y: R) = spec { between(it, x, y) }
 
 // True/False
 fun <T> KProperty1<T, Boolean?>.isTrue() = spec { isTrue(it) }

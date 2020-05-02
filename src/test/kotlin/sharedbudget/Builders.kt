@@ -30,7 +30,7 @@ class ExpenseDtoBuilder {
     var description: String = randomString()
     var category: String = randomString()
     var amount: Long = randomLong(MIN_EXPENSE_AMOUNT, MAX_EXPENSE_AMOUNT)
-    private var spendings: MutableSet<SpendingDto> = mutableSetOf()
+    var spendings: MutableSet<SpendingDto> = mutableSetOf()
     var deleted: Boolean = false
 
     operator fun SpendingDto.unaryPlus() {

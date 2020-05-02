@@ -33,12 +33,22 @@ class ExpenseEntityAssert(expenseEntity: ExpenseEntity) :
     fun onEachSpending(block: (Map.Entry<String, SpendingEntityAssert>) -> Unit) = apply {
         actual.spendings.associateBy({ it.uuid }, { SpendingEntityAssert.assertThat(it) }).onEach { block(it) }
     }
-    fun hasVersion(serverVersion: Long)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::serverVersion, serverVersion) }
-    fun hasCreatedBy(createdBy: String)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdBy, createdBy) }
-    fun hasCreatedDate(createdDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdDate, createdDate) }
-    fun hasModifiedBy(modifiedBy: String?)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedBy, modifiedBy) }
-    fun hasModifiedDate(modifiedDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedDate, modifiedDate) }
-    fun hasClosedDate(closedDate: Instant)= apply { hasFieldOrPropertyWithValue(ExpenseEntity::closedDate, closedDate) }
+
+    fun hasVersion(serverVersion: Long) =
+        apply { hasFieldOrPropertyWithValue(ExpenseEntity::serverVersion, serverVersion) }
+
+    fun hasCreatedBy(createdBy: String) = apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdBy, createdBy) }
+    fun hasCreatedDate(createdDate: Instant) =
+        apply { hasFieldOrPropertyWithValue(ExpenseEntity::createdDate, createdDate) }
+
+    fun hasModifiedBy(modifiedBy: String?) =
+        apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedBy, modifiedBy) }
+
+    fun hasModifiedDate(modifiedDate: Instant) =
+        apply { hasFieldOrPropertyWithValue(ExpenseEntity::modifiedDate, modifiedDate) }
+
+    fun hasClosedDate(closedDate: Instant) =
+        apply { hasFieldOrPropertyWithValue(ExpenseEntity::closedDate, closedDate) }
 
     companion object {
         fun assertThat(expenseEntity: ExpenseEntity) = ExpenseEntityAssert(expenseEntity)

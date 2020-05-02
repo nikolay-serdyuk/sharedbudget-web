@@ -4,15 +4,21 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.ExpenseDto
+import sharedbudget.entities.ExpensesRepository
+import sharedbudget.entities.SpendingDto
 import java.lang.Long.max
 import java.text.SimpleDateFormat
 import java.time.Instant
 
 @Service
 @Transactional
-class Service(private val accountResolver: AccountResolver, private val expensesRepository: ExpensesRepository) {
+class Service(
+    private val accountResolver: AccountResolver,
+    private val expensesRepository: ExpensesRepository,
+    private val locks: Locks
+) {
 
-    fun getExpenses(date: String? = null): Iterable<ExpenseEntity> {
+    fun getExpenses(date: String? = null): Iterable<ExpenseEntity> = locks.retryWithLock(accountResolver.accountId) {
 
         val instantDate = when (date) {
             null -> Instant.now()
@@ -21,29 +27,52 @@ class Service(private val accountResolver: AccountResolver, private val expenses
 
         val spec = ExpenseEntity::accountId.equal(accountResolver.accountId) and
                 ExpenseEntity::createdDate.equal(instantDate)
-        return expensesRepository.findAll(spec)
+        expensesRepository.findAll(spec)
     }
 
-    fun postExpenses(expenseDtos: Iterable<ExpenseDto>): Iterable<ExpenseEntity> {
-
-        val expenseEntities = expenseDtos.map {
-            findExistingOneOrCreate(it).apply {
-                amount = max(amount, it.amount)
-                spendings.addAll(it.spendings.map { spending -> spending.toSpendingEntity(this) })
-            }
+    fun postExpenses(dtos: Collection<ExpenseDto>): Iterable<ExpenseEntity> =
+        locks.retryWithLock(accountResolver.accountId) {
+            dtos
+                .validate(POST_VALIDATORS)
+                .flatMap { mergeOrCreate(it) }
+                .let { expensesRepository.saveAll(it) }
         }
 
-        return expensesRepository.saveAll(expenseEntities)
-    }
+    private fun mergeOrCreate(dto: ExpenseDto): Iterable<ExpenseEntity> {
+        var entity = findOneByAccountIdAndDescription(accountResolver.accountId, dto.description)
+        val isNew = entity == null
 
-    private fun findExistingOneOrCreate(expenseDto: ExpenseDto) =
-        findOneByAccountIdAndDescription(accountResolver.accountId, expenseDto.description)
-            ?: expenseDto.toExpenseEntity(
+        if (isNew) {
+            entity = dto.toExpenseEntity(
                 accountResolver.accountId,
                 accountResolver.userId,
                 INITIAL_SERVER_VERSION,
                 Utils.firstDayOfMonth()
             )
+        } else {
+            entity.amount = max(entity.amount, dto.amount)
+        }
+        entity.spendings += dto.spendings.toSpendingEntities(entity)
+
+        if (isNew) {
+            return listOf(entity)
+        }
+
+        val deletedEntity = dto.toExpenseEntity(
+            accountResolver.accountId,
+            accountResolver.userId,
+            INITIAL_SERVER_VERSION,
+            Utils.firstDayOfMonth()
+        ).also {
+            it.deleted = true
+            it.spendings += dto.spendings.toSpendingEntities(entity, deleted = true)
+        }
+
+        return listOf(deletedEntity, entity)
+    }
+
+    private fun Iterable<SpendingDto>.toSpendingEntities(owner: ExpenseEntity, deleted: Boolean = false) =
+        map { spending -> spending.toSpendingEntity(owner, deleted) }
 
     private fun findOneByAccountIdAndDescription(
         accountId: String,
@@ -51,11 +80,20 @@ class Service(private val accountResolver: AccountResolver, private val expenses
     ) = expensesRepository.findOne(
         ExpenseEntity::accountId.equal(accountId) and
                 ExpenseEntity::description.equal(description) and
-                ExpenseEntity::serverVersion.equal(INITIAL_SERVER_VERSION)
+                ExpenseEntity::serverVersion.equal(INITIAL_SERVER_VERSION) and
+                ExpenseEntity::deleted.equal(false)
     ).orElse(null)
 
+    private fun Collection<ExpenseDto>.validate(validators: List<Validator>): Collection<ExpenseDto> {
+        validators.onEach { it.validate(this) }
+        return this
+    }
+
     internal companion object {
-        val DATE_FORMAT = SimpleDateFormat("yyyy/MM/dd")
         const val INITIAL_SERVER_VERSION = 1L
+
+        val DATE_FORMAT = SimpleDateFormat("yyyy/MM/dd")
+
+        private val POST_VALIDATORS = listOf(PayloadLengthValidator, DescriptionsValidator, UuidsValidator)
     }
 }
