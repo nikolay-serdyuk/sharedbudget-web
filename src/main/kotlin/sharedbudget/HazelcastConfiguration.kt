@@ -26,5 +26,9 @@ class HazelcastConfiguration {
     }
 
     private fun mapConfig() = MapConfig(ACCOUNT_LOCKS_MAP_NAME)
-        .apply { timeToLiveSeconds = 3600 / 2 }
+        .apply { timeToLiveSeconds = ACCOUNT_LOCKS_MAP_TTL }
+
+    private companion object {
+        private const val ACCOUNT_LOCKS_MAP_TTL = 3600 / 2
+    }
 }

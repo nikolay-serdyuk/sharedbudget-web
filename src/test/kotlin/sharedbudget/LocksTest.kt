@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest
 class LocksTest @Autowired constructor(private val locks: Locks) {
 
     @Test
-    fun `check simple lock`() {
+    fun `check a simple lock`() {
         val accountId = randomString()
 
         locks.withLock(accountId) {

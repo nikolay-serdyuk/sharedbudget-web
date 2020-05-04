@@ -18,6 +18,7 @@ class Service(
     private val locks: Locks
 ) {
 
+    @Transactional(readOnly = true)
     fun getExpenses(date: String? = null): Iterable<ExpenseEntity> = locks.retryWithLock(accountResolver.accountId) {
 
         val instantDate = when (date) {
@@ -50,6 +51,7 @@ class Service(
                 Utils.firstDayOfMonth()
             )
         } else {
+            // FIXME: return a conflict or implement a conflict resolver?
             entity.amount = max(entity.amount, dto.amount)
         }
         entity.spendings += dto.spendings.toSpendingEntities(entity)
