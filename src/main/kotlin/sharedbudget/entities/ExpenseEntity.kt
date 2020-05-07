@@ -27,7 +27,13 @@ data class ExpenseDto(
     override val deleted: Boolean
 ) : ExpenseInterface<SpendingDto> {
 
-    fun toExpenseEntity(accountId: String, userId: String, serverVersion: Long, createdDate: Instant) =
+    fun toExpenseEntity(
+        accountId: String,
+        userId: String,
+        serverVersion: Long,
+        createdDate: Instant,
+        description: String = this.description
+    ) =
         ExpenseEntity(
             accountId = accountId,
             uuid = uuid,

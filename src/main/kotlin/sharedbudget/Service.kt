@@ -6,7 +6,6 @@ import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.ExpenseDto
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingDto
-import java.lang.Long.max
 import java.text.SimpleDateFormat
 import java.time.Instant
 
@@ -35,43 +34,26 @@ class Service(
         locks.retryWithLock(accountResolver.accountId) {
             dtos
                 .validate(POST_VALIDATORS)
-                .flatMap { mergeOrCreate(it) }
+                .map { create(it) }
                 .let { expensesRepository.saveAll(it) }
         }
 
-    private fun mergeOrCreate(dto: ExpenseDto): Iterable<ExpenseEntity> {
-        var entity = findOneByAccountIdAndDescription(accountResolver.accountId, dto.description)
-        val isNew = entity == null
+    private fun create(dto: ExpenseDto): ExpenseEntity {
+        val isUniqueDescription = findOneByAccountIdAndDescription(accountResolver.accountId, dto.description) == null
+        val description = dto.description + if (isUniqueDescription) "" else descriptionPostfix()
 
-        if (isNew) {
-            entity = dto.toExpenseEntity(
-                accountResolver.accountId,
-                accountResolver.userId,
-                INITIAL_SERVER_VERSION,
-                Utils.firstDayOfMonth()
-            )
-        } else {
-            // FIXME: return a conflict or implement a conflict resolver?
-            entity.amount = max(entity.amount, dto.amount)
-        }
-        entity.spendings += dto.spendings.toSpendingEntities(entity)
-
-        if (isNew) {
-            return listOf(entity)
-        }
-
-        val deletedEntity = dto.toExpenseEntity(
+        return dto.toExpenseEntity(
             accountResolver.accountId,
             accountResolver.userId,
             INITIAL_SERVER_VERSION,
-            Utils.firstDayOfMonth()
-        ).also {
-            it.deleted = true
-            it.spendings += dto.spendings.toSpendingEntities(entity, deleted = true)
+            Utils.firstDayOfMonth(),
+            description
+        ).apply {
+            spendings += dto.spendings.toSpendingEntities(this)
         }
-
-        return listOf(deletedEntity, entity)
     }
+
+    private fun descriptionPostfix() = " (${accountResolver.userId})"
 
     private fun Iterable<SpendingDto>.toSpendingEntities(owner: ExpenseEntity, deleted: Boolean = false) =
         map { spending -> spending.toSpendingEntity(owner, deleted) }

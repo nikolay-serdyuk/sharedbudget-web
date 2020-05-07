@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import com.github.javafaker.Faker
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import sharedbudget.Service.Companion.INITIAL_SERVER_VERSION
 import sharedbudget.TestUtils.generateExpenseDto
-import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingsRepository
-import java.lang.Long.max
 import java.util.*
 import javax.ws.rs.BadRequestException
 
@@ -61,20 +60,20 @@ class ServiceTest @Autowired constructor(
         val inputExpense2 = generateExpenseDto(description = description)
         val inputExpense3 = generateExpenseDto(description = description)
 
+        val userId1 = Faker().funnyName().name()
+        accountResolver.userId = userId1
         val outputExpense1 = service.postExpenses(listOf(inputExpense1)).single()
-        val outputExpenses2 = service.postExpenses(listOf(inputExpense2)).associateBy { it.uuid }
-        val outputExpense2 = outputExpenses2.getValue(outputExpense1.uuid)
-        assert(outputExpense2.spendings.size == 4)
-        assert(outputExpense2.amount >= outputExpense1.amount)
-        outputExpense2.assertUpdatedFrom(outputExpense1)
+        assertThat(outputExpense1.description).isEqualTo(description)
 
-        val outputExpenses3 = service.postExpenses(listOf(inputExpense3)).associateBy { it.uuid }
-        val outputExpense3 = outputExpenses3.getValue(outputExpense2.uuid)
-        assert(outputExpense3.spendings.size == 6)
-        assert(outputExpense3.amount >= outputExpense2.amount)
-        outputExpense3.assertUpdatedFrom(outputExpense2)
+        val userId2 = Faker().funnyName().name()
+        accountResolver.userId = userId2
+        val outputExpense2 = service.postExpenses(listOf(inputExpense2)).single()
+        assertThat(outputExpense2.description).isEqualTo("$description ($userId2)")
 
-        assert(expensesRepository.findAll().size == 3)
+        val userId3 = Faker().funnyName().name()
+        accountResolver.userId = userId3
+        val outputExpense3 = service.postExpenses(listOf(inputExpense3)).single()
+        assertThat(outputExpense3.description).isEqualTo("$description ($userId3)")
     }
 
     @Test
@@ -153,27 +152,5 @@ class ServiceTest @Autowired constructor(
         val inputExpense = generateExpenseDto()
         assertDoesNotThrow { service.postExpenses(listOf(inputExpense)) }
         locks.unlock(accountId)
-    }
-
-    private fun ExpenseEntity.assertUpdatedFrom(other: ExpenseEntity) {
-        val otherSpendingsMap = other.spendings.associateBy { it.uuid }.toMutableMap()
-
-        ExpenseEntityAssert.assertThat(this)
-            .hasUuid(other.uuid)
-            .hasDescription(other.description)
-            .hasCategory(other.category)
-            .hasAmount(max(amount, other.amount))
-            .hasDeleted(other.deleted)
-            .onEachSpending { (uuid, spendingEntityAssert) ->
-                val otherSpending = otherSpendingsMap[uuid]
-                if (otherSpending != null) {
-                    spendingEntityAssert.hasUuid(otherSpending.uuid)
-                    spendingEntityAssert.hasAmount(otherSpending.amount)
-                    spendingEntityAssert.hasComment(otherSpending.comment)
-                    spendingEntityAssert.hasDeleted(otherSpending.deleted)
-                    otherSpendingsMap.remove(uuid)
-                }
-            }
-        assert(otherSpendingsMap.isEmpty())
     }
 }
