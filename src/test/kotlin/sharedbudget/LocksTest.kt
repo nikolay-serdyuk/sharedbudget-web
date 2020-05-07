@@ -28,11 +28,11 @@ class LocksTest @Autowired constructor(private val locks: Locks) {
         assert(locks.isLocked(accountId) == false)
         assertThatThrownBy {
             locks.unlock(accountId)
-        }.isInstanceOf(Locks.UnableReleaseLockException::class.java)
+        }.isInstanceOf(UnableReleaseLockException::class.java)
 
         assertThatThrownBy {
             locks.unlock(randomString())
-        }.isInstanceOf(Locks.UnableReleaseLockException::class.java)
+        }.isInstanceOf(UnableReleaseLockException::class.java)
     }
 
     @Test
@@ -42,7 +42,7 @@ class LocksTest @Autowired constructor(private val locks: Locks) {
         locks.withLock(accountId) {
             assertThatThrownBy {
                 locks.withLock(accountId) {}
-            }.isInstanceOf(Locks.UnableAcquireLockException::class.java)
+            }.isInstanceOf(UnableAcquireLockException::class.java)
         }
     }
 }

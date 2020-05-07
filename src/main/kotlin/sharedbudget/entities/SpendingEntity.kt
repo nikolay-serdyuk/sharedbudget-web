@@ -1,6 +1,5 @@
 package sharedbudget.entities
 
-import sharedbudget.Utils
 import java.time.Instant
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -12,11 +11,11 @@ import javax.persistence.JoinColumns
 import javax.persistence.ManyToOne
 import javax.persistence.Table
 
-interface SpendingInterface {
-    val uuid: String
-    val amount: Long
-    val comment: String?
-    val deleted: Boolean
+sealed class Spending {
+    abstract val uuid: String
+    abstract val amount: Long
+    abstract val comment: String?
+    abstract val deleted: Boolean
 }
 
 data class SpendingDto(
@@ -24,15 +23,15 @@ data class SpendingDto(
     override val amount: Long = 0,
     override val comment: String? = null,
     override val deleted: Boolean
-) : SpendingInterface {
+) : Spending() {
 
-    fun toSpendingEntity(owner: ExpenseEntity, deleted: Boolean = false) = SpendingEntity(
+    fun toSpendingEntity(owner: ExpenseEntity, createdBy: String, deleted: Boolean = false) = SpendingEntity(
         owner = owner,
         uuid = uuid,
         amount = amount,
         comment = comment,
-        createdDate = Utils.firstDayOfMonth(),
-        createdBy = owner.createdBy,
+        createdDate = Instant.now(),
+        createdBy = createdBy,
         deleted = this.deleted or deleted
     )
 }
@@ -62,7 +61,7 @@ class SpendingEntity(
 
     val createdDate: Instant
 
-) : SpendingInterface {
+) : Spending(), UpdatableEntity<SpendingEntity> {
 
     @Id
     @Column(name = "ACCOUNT_ID")
@@ -70,4 +69,21 @@ class SpendingEntity(
 
     @Column(name = "EXPENSE_UUID")
     val expenseUuid: String = owner.uuid
+
+    override fun updateFrom(other: SpendingEntity): SpendingEntity {
+        deleted = other.deleted
+        return this
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+
+        if (javaClass != other?.javaClass) return false
+
+        val otherSpending = other as SpendingEntity
+
+        return uuid == otherSpending.uuid
+    }
+
+    override fun hashCode(): Int = uuid.hashCode()
 }

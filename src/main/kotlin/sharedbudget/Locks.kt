@@ -8,7 +8,6 @@ import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 import com.hazelcast.core.HazelcastInstance
 import org.springframework.stereotype.Component
-import javax.ws.rs.InternalServerErrorException
 
 @Component
 class Locks(private val hazelcastInstance: HazelcastInstance) {
@@ -55,12 +54,6 @@ class Locks(private val hazelcastInstance: HazelcastInstance) {
     }
 
     internal fun isLocked(accountId: String) = subscriberLockCache[accountId]
-
-    class UnableAcquireLockException(accountId: String) :
-        InternalServerErrorException("Can't acquire Lock[$accountId]")
-
-    class UnableReleaseLockException(accountId: String) :
-        InternalServerErrorException("Can't release Lock[$accountId]")
 
     companion object {
         const val ACCOUNT_LOCKS_MAP_NAME = "ACCOUNT_LOCKS_MAP_NAME"

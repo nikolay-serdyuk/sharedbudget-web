@@ -9,13 +9,14 @@ import javax.persistence.IdClass
 import javax.persistence.OneToMany
 import javax.persistence.Table
 
-interface ExpenseInterface<T : SpendingInterface> {
-    val uuid: String
-    val description: String
-    val category: String
-    val amount: Long
-    val spendings: MutableSet<T>
-    val deleted: Boolean
+sealed class Expense<T : Spending> {
+    abstract val uuid: String
+    abstract val description: String
+    abstract val category: String
+    abstract val amount: Long
+    abstract val closedDate: Instant?
+    abstract val spendings: MutableSet<T>
+    abstract val deleted: Boolean
 }
 
 data class ExpenseDto(
@@ -23,9 +24,11 @@ data class ExpenseDto(
     override val description: String,
     override val category: String,
     override val amount: Long,
+    override val closedDate: Instant?,
     override val spendings: MutableSet<SpendingDto>,
-    override val deleted: Boolean
-) : ExpenseInterface<SpendingDto> {
+    override val deleted: Boolean,
+    val clientVersion: Long
+) : Expense<SpendingDto>() {
 
     fun toExpenseEntity(
         accountId: String,
@@ -49,7 +52,6 @@ data class ExpenseDto(
             modifiedBy = null,
             modifiedDate = null
         )
-
 }
 
 @Entity
@@ -63,21 +65,20 @@ class ExpenseEntity(
     @Id
     override val uuid: String,
 
-    override val description: String,
+    override var description: String,
 
     override var category: String,
 
     override var amount: Long,
 
-    var closedDate: Instant?,
+    override var closedDate: Instant?,
 
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true, mappedBy = "owner", fetch = FetchType.EAGER)
     override val spendings: MutableSet<SpendingEntity> = mutableSetOf(),
 
     override var deleted: Boolean,
 
-    // FIXME: add @Version
-    val serverVersion: Long,
+    var serverVersion: Long,
 
     // FIXME: add @CreatedBy
     val createdBy: String,
@@ -86,9 +87,9 @@ class ExpenseEntity(
     val createdDate: Instant,
 
     // FIXME: add @LastModifiedBy
-    val modifiedBy: String?,
+    var modifiedBy: String?,
 
     // FIXME: add @LastModifiedDate
-    val modifiedDate: Instant?
+    var modifiedDate: Instant?
 
-) : ExpenseInterface<SpendingEntity>
+) : Expense<SpendingEntity>()

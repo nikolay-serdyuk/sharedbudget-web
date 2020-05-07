@@ -13,8 +13,10 @@ import sharedbudget.Service.Companion.INITIAL_SERVER_VERSION
 import sharedbudget.TestUtils.generateExpenseDto
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingsRepository
+import java.time.Instant
 import java.util.*
 import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -47,33 +49,31 @@ class ServiceTest @Autowired constructor(
         outputExpense1.assertEqualTo(inputExpense1)
         val outputExpense2 = outputExpenseMap.getValue(inputExpense2.uuid)
         outputExpense2.assertEqualTo(inputExpense2)
-
-        ExpenseEntityAssert.assertThat(outputExpense1)
-            .hasVersion(INITIAL_SERVER_VERSION)
-        // TODO: add more checks for auditable fields
     }
 
     @Test
     fun `three people post expenses with same description`() {
         val description = faker.food().fruit()
-        val inputExpense1 = generateExpenseDto(description = description)
-        val inputExpense2 = generateExpenseDto(description = description)
-        val inputExpense3 = generateExpenseDto(description = description)
+        val expenseDto1 = generateExpenseDto(description = description)
+        val expenseDto2 = generateExpenseDto(description = description)
+        val expenseDto3 = generateExpenseDto(description = description)
 
         val userId1 = Faker().funnyName().name()
         accountResolver.userId = userId1
-        val outputExpense1 = service.postExpenses(listOf(inputExpense1)).single()
-        assertThat(outputExpense1.description).isEqualTo(description)
+        val expenseEntity1 = service.postExpenses(listOf(expenseDto1)).single()
+        assertThat(expenseEntity1.description).isEqualTo(description)
 
         val userId2 = Faker().funnyName().name()
         accountResolver.userId = userId2
-        val outputExpense2 = service.postExpenses(listOf(inputExpense2)).single()
-        assertThat(outputExpense2.description).isEqualTo("$description ($userId2)")
+        val expenseEntity2 = service.postExpenses(listOf(expenseDto2)).single()
+        assertThat(expenseEntity2.description).startsWith("$description ($userId2-")
+        assertThat(expenseEntity2.serverVersion).isEqualTo(INITIAL_SERVER_VERSION + 1)
 
         val userId3 = Faker().funnyName().name()
         accountResolver.userId = userId3
-        val outputExpense3 = service.postExpenses(listOf(inputExpense3)).single()
-        assertThat(outputExpense3.description).isEqualTo("$description ($userId3)")
+        val expenseEntity3 = service.postExpenses(listOf(expenseDto3)).single()
+        assertThat(expenseEntity3.description).startsWith("$description ($userId3-")
+        assertThat(expenseEntity3.serverVersion).isEqualTo(INITIAL_SERVER_VERSION + 1)
     }
 
     @Test
@@ -94,10 +94,10 @@ class ServiceTest @Autowired constructor(
     @Test
     fun `check thrown exception if payload contains multiple expenses with similar description`() {
         val description = faker.food().fruit()
-        val inputExpense1 = generateExpenseDto(description = description)
-        val inputExpense2 = generateExpenseDto(description = description)
+        val expenseDto1 = generateExpenseDto(description = description)
+        val expenseDto2 = generateExpenseDto(description = description)
 
-        assertThatThrownBy { service.postExpenses(listOf(inputExpense1, inputExpense2)) }
+        assertThatThrownBy { service.postExpenses(listOf(expenseDto1, expenseDto2)) }
             .isInstanceOf(BadRequestException::class.java)
             .hasMessageStartingWith("found multiple expenses with same description")
     }
@@ -105,14 +105,14 @@ class ServiceTest @Autowired constructor(
     @Test
     fun `check thrown exception if payload contains multiple expenses with similar uuid`() {
         val uuid = UUID.randomUUID().toString()
-        val inputExpense1 = expenseDto {
+        val expenseDto1 = expenseDto {
             this.uuid = uuid
         }
-        val inputExpense2 = expenseDto {
+        val expenseDto2 = expenseDto {
             this.uuid = uuid
         }
 
-        assertThatThrownBy { service.postExpenses(listOf(inputExpense1, inputExpense2)) }
+        assertThatThrownBy { service.postExpenses(listOf(expenseDto1, expenseDto2)) }
             .isInstanceOf(BadRequestException::class.java)
             .hasMessageStartingWith("found multiple expenses with same uuid")
     }
@@ -120,7 +120,7 @@ class ServiceTest @Autowired constructor(
     @Test
     fun `check thrown exception if payload contains multiple spendings with similar uuid`() {
         val uuid = UUID.randomUUID().toString()
-        val inputExpense = expenseDto {
+        val expenseDto = expenseDto {
             +spendingDto {
                 this.uuid = uuid
             }
@@ -129,18 +129,63 @@ class ServiceTest @Autowired constructor(
             }
         }
 
-        assertThatThrownBy { service.postExpenses(listOf(inputExpense)) }
+        assertThatThrownBy { service.postExpenses(listOf(expenseDto)) }
             .isInstanceOf(BadRequestException::class.java)
             .hasMessageStartingWith("found multiple spendings with same uuid")
     }
 
     @Test
+    fun `check NotFoundException is thrown when updating unknown entity`() {
+        val expenseDto = generateExpenseDto()
+
+        assertThatThrownBy { service.putExpenses(listOf(expenseDto)) }
+            .isInstanceOf(NotFoundException::class.java)
+    }
+
+    @Test
+    fun `check ConflictException is thrown when patching an entity with old data`() {
+        val uuid = UUID.randomUUID().toString()
+        val initialExpenseDto = expenseDto {
+            this.uuid = uuid
+        }
+        service.postExpenses(listOf(initialExpenseDto))
+
+        val updatedExpenseDto = expenseDto {
+            this.uuid = uuid
+            this.clientVersion = INITIAL_SERVER_VERSION
+        }
+        assertThatThrownBy { service.putExpenses(listOf(updatedExpenseDto)) }
+            .isInstanceOf(ConflictException::class.java)
+    }
+
+    @Test
+    fun `check patch`() {
+        val uuid = UUID.randomUUID().toString()
+        val initialExpenseDto = expenseDto {
+            this.uuid = uuid
+            +spendingDto {  }
+        }
+        service.postExpenses(listOf(initialExpenseDto))
+
+        val updatedExpenseDto = expenseDto {
+            this.uuid = uuid
+            closedDate = Instant.now()
+            deleted = true
+            clientVersion = INITIAL_SERVER_VERSION + 1
+            +initialExpenseDto.spendings.single().copy(deleted = true)
+            +spendingDto {  }
+        }
+        val updatedExpenseEntity = service.putExpenses(listOf(updatedExpenseDto)).single()
+        updatedExpenseEntity.assertEqualTo(updatedExpenseDto)
+    }
+
+    @Test
     fun `try to post for a locked account`() {
         locks.lock(accountResolver.accountId)
-        val inputExpense = generateExpenseDto()
+        val expenseDto = generateExpenseDto()
 
-        assertThatThrownBy { service.postExpenses(listOf(inputExpense)) }
-            .isInstanceOf(Locks.UnableAcquireLockException::class.java)
+        assertThatThrownBy { service.postExpenses(listOf(expenseDto)) }
+            .isInstanceOf(UnableAcquireLockException::class.java)
 
         locks.unlock(accountResolver.accountId)
     }
@@ -149,8 +194,8 @@ class ServiceTest @Autowired constructor(
     fun `try to post when another account is locked`() {
         val accountId = randomString()
         locks.lock(accountId)
-        val inputExpense = generateExpenseDto()
-        assertDoesNotThrow { service.postExpenses(listOf(inputExpense)) }
+        val expenseDto = generateExpenseDto()
+        assertDoesNotThrow { service.postExpenses(listOf(expenseDto)) }
         locks.unlock(accountId)
     }
 }

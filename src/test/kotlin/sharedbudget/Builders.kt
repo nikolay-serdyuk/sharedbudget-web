@@ -1,7 +1,9 @@
 package sharedbudget
 
+import sharedbudget.Service.Companion.INITIAL_SERVER_VERSION
 import sharedbudget.entities.ExpenseDto
 import sharedbudget.entities.SpendingDto
+import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 
@@ -30,8 +32,10 @@ class ExpenseDtoBuilder {
     var description: String = randomString()
     var category: String = randomString()
     var amount: Long = randomLong(MIN_EXPENSE_AMOUNT, MAX_EXPENSE_AMOUNT)
-    var spendings: MutableSet<SpendingDto> = mutableSetOf()
     var deleted: Boolean = false
+    var closedDate: Instant? = null
+    var spendings: MutableSet<SpendingDto> = mutableSetOf()
+    var clientVersion: Long = INITIAL_SERVER_VERSION
 
     operator fun SpendingDto.unaryPlus() {
         spendings.add(this)
@@ -42,8 +46,10 @@ class ExpenseDtoBuilder {
         description = description,
         category = category,
         amount = amount,
+        closedDate = closedDate,
         spendings = spendings,
-        deleted = deleted
+        deleted = deleted,
+        clientVersion = clientVersion
     )
 }
 

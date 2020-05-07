@@ -6,8 +6,11 @@ import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.ExpenseDto
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingDto
+import sharedbudget.entities.updateAllFrom
 import java.text.SimpleDateFormat
 import java.time.Instant
+import javax.ws.rs.NotFoundException
+import kotlin.random.Random
 
 @Service
 @Transactional
@@ -30,6 +33,7 @@ class Service(
         expensesRepository.findAll(spec)
     }
 
+    // FIXME: convert result to DTO
     fun postExpenses(dtos: Collection<ExpenseDto>): Iterable<ExpenseEntity> =
         locks.retryWithLock(accountResolver.accountId) {
             dtos
@@ -38,25 +42,58 @@ class Service(
                 .let { expensesRepository.saveAll(it) }
         }
 
+    // FIXME: convert result to DTO
+    fun putExpenses(dtos: Collection<ExpenseDto>): Iterable<ExpenseEntity> =
+        locks.retryWithLock(accountResolver.accountId) {
+            dtos
+                .validate(PUT_VALIDATORS)
+                .map { update(it) }
+                .let { expensesRepository.saveAll(it) }
+        }
+
     private fun create(dto: ExpenseDto): ExpenseEntity {
         val isUniqueDescription = findOneByAccountIdAndDescription(accountResolver.accountId, dto.description) == null
-        val description = dto.description + if (isUniqueDescription) "" else descriptionPostfix()
+        val description = dto.description + if (isUniqueDescription) "" else postfix()
+        val serverVersion = INITIAL_SERVER_VERSION + if (isUniqueDescription) 0 else 1
 
         return dto.toExpenseEntity(
             accountResolver.accountId,
             accountResolver.userId,
-            INITIAL_SERVER_VERSION,
+            serverVersion,
             Utils.firstDayOfMonth(),
             description
         ).apply {
-            spendings += dto.spendings.toSpendingEntities(this)
+            spendings += dto.spendings.toSpendingEntities(this, createdBy)
         }
     }
 
-    private fun descriptionPostfix() = " (${accountResolver.userId})"
+    private fun update(dto: ExpenseDto): ExpenseEntity {
+        val entity = expensesRepository.findFirstByAccountIdAndUuid(accountResolver.accountId, dto.uuid)
+            ?: throw NotFoundException("Expense uuid == ${dto.uuid} is not found")
 
-    private fun Iterable<SpendingDto>.toSpendingEntities(owner: ExpenseEntity, deleted: Boolean = false) =
-        map { spending -> spending.toSpendingEntity(owner, deleted) }
+        if (dto.clientVersion <= entity.serverVersion) {
+            throw ConflictException(entity)
+        }
+
+        with(entity) {
+            description = dto.description
+            category = dto.category
+            amount = dto.amount
+            closedDate = dto.closedDate
+            deleted = dto.deleted
+            serverVersion = dto.clientVersion
+            modifiedBy = accountResolver.userId
+            modifiedDate = Instant.now()
+            spendings.updateAllFrom(dto.spendings.toSpendingEntities(this, accountResolver.userId))
+        }
+
+        return entity
+    }
+
+    private fun postfix() = " (${accountResolver.userId}-${String.format("%x", Random.nextInt(1000, 9999))})"
+
+    private fun Iterable<SpendingDto>.toSpendingEntities(owner: ExpenseEntity, createdBy: String, deleted: Boolean = false) =
+        map { spending -> spending.toSpendingEntity(owner, createdBy, deleted) }
 
     private fun findOneByAccountIdAndDescription(
         accountId: String,
@@ -78,6 +115,7 @@ class Service(
 
         val DATE_FORMAT = SimpleDateFormat("yyyy/MM/dd")
 
+        private val PUT_VALIDATORS = listOf(PayloadLengthValidator, UuidsValidator)
         private val POST_VALIDATORS = listOf(PayloadLengthValidator, DescriptionsValidator, UuidsValidator)
     }
 }
