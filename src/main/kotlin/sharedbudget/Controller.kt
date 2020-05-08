@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import sharedbudget.entities.ExpenseDto
+import sharedbudget.entities.InputExpenseDto
 
 @RestController
 class Controller(private val service: Service) {
@@ -19,12 +19,12 @@ class Controller(private val service: Service) {
     @PostMapping
     fun postExpenses(
         @RequestParam(value = "expenses", required = true)
-        expenses: Collection<ExpenseDto>
+        expenses: Collection<InputExpenseDto>
     ) = service.postExpenses(expenses)
 
     @PutMapping
     fun putExpenses(
         @RequestParam(value = "expenses", required = true)
-        expenses: Collection<ExpenseDto>
+        expenses: Collection<InputExpenseDto>
     ) = service.putExpenses(expenses)
 }

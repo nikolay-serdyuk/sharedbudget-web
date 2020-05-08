@@ -1,9 +1,10 @@
 package sharedbudget
 
 import org.assertj.core.api.AbstractObjectAssert
-import sharedbudget.entities.ExpenseDto
+import sharedbudget.entities.InputExpenseDto
 import sharedbudget.entities.ExpenseEntity
 import sharedbudget.entities.Expense
+import sharedbudget.entities.OutputExpenseDto
 import sharedbudget.entities.SpendingEntity
 import java.time.Instant
 import kotlin.reflect.KProperty1
@@ -18,6 +19,8 @@ class SpendingEntityAssert(spendingEntity: SpendingEntity) :
     fun hasComment(comment: String?) = apply { hasFieldOrPropertyWithValue(SpendingEntity::comment, comment) }
 
     fun hasDeleted(deleted: Boolean) = apply { hasFieldOrPropertyWithValue(SpendingEntity::deleted, deleted) }
+
+    fun hasCreatedDate(createdDate: Instant) = apply { hasFieldOrPropertyWithValue(SpendingEntity::createdDate, createdDate) }
 
     companion object {
         fun assertThat(spendingEntity: SpendingEntity) = SpendingEntityAssert(spendingEntity)
@@ -85,13 +88,17 @@ fun ExpenseEntity.assertEqualTo(other: Expense<*>) {
                 .hasAmount(otherSpending.amount)
                 .hasComment(otherSpending.comment)
                 .hasDeleted(otherSpending.deleted)
+                .hasCreatedDate(otherSpending.createdDate)
         }
 
     when(other) {
-        is ExpenseDto -> {
+        is InputExpenseDto -> {
             assert.hasVersion(other.clientVersion)
         }
         is ExpenseEntity -> {
+            assert.hasVersion(other.serverVersion)
+        }
+        is OutputExpenseDto -> {
             assert.hasVersion(other.serverVersion)
         }
     }

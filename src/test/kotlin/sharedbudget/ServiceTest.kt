@@ -1,19 +1,17 @@
 package sharedbudget
 
+import com.github.javafaker.Faker
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import com.github.javafaker.Faker
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.Assertions.assertDoesNotThrow
-import sharedbudget.Service.Companion.INITIAL_SERVER_VERSION
 import sharedbudget.TestUtils.generateExpenseDto
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingsRepository
-import java.time.Instant
 import java.util.*
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -43,20 +41,23 @@ class ServiceTest @Autowired constructor(
         val inputExpense1 = generateExpenseDto(description = "abc")
         val inputExpense2 = generateExpenseDto(description = "xyz")
 
-        val outputExpenseMap = service.postExpenses(listOf(inputExpense1, inputExpense2)).associateBy { it.uuid }
+        service.postExpenses(listOf(inputExpense1, inputExpense2))
 
-        val outputExpense1 = outputExpenseMap.getValue(inputExpense1.uuid)
+        val outputExpense1 =
+            expensesRepository.findFirstByAccountIdAndUuid(accountResolver.accountId, inputExpense1.uuid)!!
         outputExpense1.assertEqualTo(inputExpense1)
-        val outputExpense2 = outputExpenseMap.getValue(inputExpense2.uuid)
+
+        val outputExpense2 =
+            expensesRepository.findFirstByAccountIdAndUuid(accountResolver.accountId, inputExpense2.uuid)!!
         outputExpense2.assertEqualTo(inputExpense2)
     }
 
     @Test
     fun `three people post expenses with same description`() {
         val description = faker.food().fruit()
-        val expenseDto1 = generateExpenseDto(description = description)
-        val expenseDto2 = generateExpenseDto(description = description)
-        val expenseDto3 = generateExpenseDto(description = description)
+        val expenseDto1 = generateExpenseDto(description = description, createdDate = Utils.firstDayOfMonth())
+        val expenseDto2 = generateExpenseDto(description = description, createdDate = Utils.firstDayOfMonth())
+        val expenseDto3 = generateExpenseDto(description = description, createdDate = Utils.firstDayOfMonth())
 
         val userId1 = Faker().funnyName().name()
         accountResolver.userId = userId1
@@ -67,13 +68,13 @@ class ServiceTest @Autowired constructor(
         accountResolver.userId = userId2
         val expenseEntity2 = service.postExpenses(listOf(expenseDto2)).single()
         assertThat(expenseEntity2.description).startsWith("$description ($userId2-")
-        assertThat(expenseEntity2.serverVersion).isEqualTo(INITIAL_SERVER_VERSION + 1)
+        assertThat(expenseEntity2.serverVersion).isEqualTo(INITIAL_CLIENT_VERSION + 1)
 
         val userId3 = Faker().funnyName().name()
         accountResolver.userId = userId3
         val expenseEntity3 = service.postExpenses(listOf(expenseDto3)).single()
         assertThat(expenseEntity3.description).startsWith("$description ($userId3-")
-        assertThat(expenseEntity3.serverVersion).isEqualTo(INITIAL_SERVER_VERSION + 1)
+        assertThat(expenseEntity3.serverVersion).isEqualTo(INITIAL_CLIENT_VERSION + 1)
     }
 
     @Test
@@ -152,7 +153,7 @@ class ServiceTest @Autowired constructor(
 
         val updatedExpenseDto = expenseDto {
             this.uuid = uuid
-            this.clientVersion = INITIAL_SERVER_VERSION
+            this.clientVersion = INITIAL_CLIENT_VERSION
         }
         assertThatThrownBy { service.putExpenses(listOf(updatedExpenseDto)) }
             .isInstanceOf(ConflictException::class.java)
@@ -163,19 +164,23 @@ class ServiceTest @Autowired constructor(
         val uuid = UUID.randomUUID().toString()
         val initialExpenseDto = expenseDto {
             this.uuid = uuid
-            +spendingDto {  }
+            +spendingDto { }
         }
         service.postExpenses(listOf(initialExpenseDto))
 
         val updatedExpenseDto = expenseDto {
             this.uuid = uuid
-            closedDate = Instant.now()
+            closedDate = randomInstant()
             deleted = true
-            clientVersion = INITIAL_SERVER_VERSION + 1
+            clientVersion = INITIAL_CLIENT_VERSION + 1
             +initialExpenseDto.spendings.single().copy(deleted = true)
-            +spendingDto {  }
+            +spendingDto { }
         }
-        val updatedExpenseEntity = service.putExpenses(listOf(updatedExpenseDto)).single()
+        service.putExpenses(listOf(updatedExpenseDto))
+
+        val updatedExpenseEntity =
+            expensesRepository.findFirstByAccountIdAndUuid(accountResolver.accountId, updatedExpenseDto.uuid)!!
+
         updatedExpenseEntity.assertEqualTo(updatedExpenseDto)
     }
 

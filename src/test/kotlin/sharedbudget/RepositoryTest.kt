@@ -10,7 +10,6 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import sharedbudget.entities.ExpensesRepository
 import sharedbudget.entities.SpendingsRepository
-import java.time.Instant
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
@@ -30,13 +29,12 @@ class RepositoryTest @Autowired constructor(
     @Test
     fun `violate EXPENSES_POSITIVE_AMOUNT constraint`() {
         val accountId = Faker().name().firstName()
-        val date = Utils.firstDayOfMonth(Instant.now())
 
         val expenseDto1 = expenseDto {
             amount = 0
         }
         assertThatThrownBy {
-            expenseDto1.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto1.toExpenseEntity(accountId, accountId, expenseDto1.description, INITIAL_CLIENT_VERSION)
                 .let { expensesRepository.save(it) }
         }
             .isInstanceOf(DataIntegrityViolationException::class.java)
@@ -46,7 +44,7 @@ class RepositoryTest @Autowired constructor(
             amount = -1
         }
         assertThatThrownBy {
-            expenseDto2.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto2.toExpenseEntity(accountId, accountId, expenseDto2.description, INITIAL_CLIENT_VERSION)
                 .let { expensesRepository.save(it) }
         }
             .isInstanceOf(DataIntegrityViolationException::class.java)
@@ -56,7 +54,6 @@ class RepositoryTest @Autowired constructor(
     @Test
     fun `violate SPENDINGS_POSITIVE_AMOUNT constraint`() {
         val accountId = Faker().name().firstName()
-        val date = Utils.firstDayOfMonth(Instant.now())
 
         val expenseDto1 = expenseDto {
             +spendingDto {
@@ -64,7 +61,7 @@ class RepositoryTest @Autowired constructor(
             }
         }
         assertThatThrownBy {
-            expenseDto1.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto1.toExpenseEntity(accountId, accountId, expenseDto1.description, INITIAL_CLIENT_VERSION)
                 .apply { spendings += expenseDto1.spendings.map { it.toSpendingEntity(this, accountId) } }
                 .let { expensesRepository.save(it) }
         }
@@ -77,7 +74,7 @@ class RepositoryTest @Autowired constructor(
             }
         }
         assertThatThrownBy {
-            expenseDto2.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto2.toExpenseEntity(accountId, accountId, expenseDto2.description, INITIAL_CLIENT_VERSION)
                 .apply { spendings += expenseDto1.spendings.map { it.toSpendingEntity(this, accountId) } }
                 .let { expensesRepository.save(it) }
         }
@@ -88,13 +85,12 @@ class RepositoryTest @Autowired constructor(
     @Test
     fun `violate EXPENSES_NOT_BLANK_DESCRIPTION constraint`() {
         val accountId = Faker().name().firstName()
-        val date = Utils.firstDayOfMonth(Instant.now())
 
         val expenseDto = expenseDto {
             description = ""
         }
         assertThatThrownBy {
-            expenseDto.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto.toExpenseEntity(accountId, accountId, expenseDto.description, INITIAL_CLIENT_VERSION)
                 .let { expensesRepository.save(it) }
         }
             .isInstanceOf(DataIntegrityViolationException::class.java)
@@ -104,13 +100,12 @@ class RepositoryTest @Autowired constructor(
     @Test
     fun `violate EXPENSES_NOT_BLANK_CATEGORY constraint`() {
         val accountId = Faker().name().firstName()
-        val date = Utils.firstDayOfMonth(Instant.now())
 
         val expenseDto = expenseDto {
             category = ""
         }
         assertThatThrownBy {
-            expenseDto.toExpenseEntity(accountId, accountId, Service.INITIAL_SERVER_VERSION, date)
+            expenseDto.toExpenseEntity(accountId, accountId, expenseDto.description, INITIAL_CLIENT_VERSION)
                 .let { expensesRepository.save(it) }
         }
             .isInstanceOf(DataIntegrityViolationException::class.java)

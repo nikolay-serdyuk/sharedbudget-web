@@ -16,23 +16,25 @@ sealed class Spending {
     abstract val amount: Long
     abstract val comment: String?
     abstract val deleted: Boolean
+    abstract val createdDate: Instant
 }
 
 data class SpendingDto(
     override val uuid: String,
     override val amount: Long = 0,
     override val comment: String? = null,
-    override val deleted: Boolean
+    override val deleted: Boolean,
+    override val createdDate: Instant
 ) : Spending() {
 
-    fun toSpendingEntity(owner: ExpenseEntity, createdBy: String, deleted: Boolean = false) = SpendingEntity(
+    fun toSpendingEntity(owner: ExpenseEntity, createdBy: String) = SpendingEntity(
         owner = owner,
         uuid = uuid,
         amount = amount,
         comment = comment,
-        createdDate = Instant.now(),
+        createdDate = createdDate,
         createdBy = createdBy,
-        deleted = this.deleted or deleted
+        deleted = deleted
     )
 }
 
@@ -59,7 +61,7 @@ class SpendingEntity(
 
     val createdBy: String,
 
-    val createdDate: Instant
+    override val createdDate: Instant
 
 ) : Spending(), UpdatableEntity<SpendingEntity> {
 
@@ -86,4 +88,12 @@ class SpendingEntity(
     }
 
     override fun hashCode(): Int = uuid.hashCode()
+
+    fun toSpendingDto() = SpendingDto(
+        uuid = uuid,
+        amount = amount,
+        comment = comment,
+        deleted = deleted,
+        createdDate = createdDate
+    )
 }

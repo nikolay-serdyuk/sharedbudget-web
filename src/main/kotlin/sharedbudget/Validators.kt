@@ -1,15 +1,15 @@
 package sharedbudget
 
-import sharedbudget.entities.ExpenseDto
+import sharedbudget.entities.InputExpenseDto
 import javax.ws.rs.BadRequestException
 
 interface Validator {
-    fun validate(dtos: Collection<ExpenseDto>)
+    fun validate(dtos: Collection<InputExpenseDto>)
 }
 
 object PayloadLengthValidator : Validator {
 
-    override fun validate(dtos: Collection<ExpenseDto>) {
+    override fun validate(dtos: Collection<InputExpenseDto>) {
         if (dtos.size > EXPENSES_LIMIT) {
             throw BadRequestException("Request contains too many expenses (limit is $EXPENSES_LIMIT)")
         }
@@ -24,9 +24,20 @@ object PayloadLengthValidator : Validator {
     private const val SPENDINGS_LIMIT = 50
 }
 
+object NullModifiedDateValidators : Validator {
+
+    override fun validate(dtos: Collection<InputExpenseDto>) {
+        for (dto in dtos) {
+            if (dto.modifiedDate != null) {
+                throw BadRequestException("Expense uuid == ${dto.uuid} contains non-null modifiedDate")
+            }
+        }
+    }
+}
+
 object DescriptionsValidator : Validator {
 
-    override fun validate(dtos: Collection<ExpenseDto>) {
+    override fun validate(dtos: Collection<InputExpenseDto>) {
         val descriptions = mutableSetOf<String>()
         for (dto in dtos) {
             if (!descriptions.add(dto.description)) {
@@ -38,7 +49,7 @@ object DescriptionsValidator : Validator {
 
 object UuidsValidator : Validator {
 
-    override fun validate(dtos: Collection<ExpenseDto>) {
+    override fun validate(dtos: Collection<InputExpenseDto>) {
         val expenseUuids = mutableSetOf<String>()
         val spendingsUuids = mutableSetOf<String>()
         for (dto in dtos) {

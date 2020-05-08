@@ -15,27 +15,30 @@ sealed class Expense<T : Spending> {
     abstract val category: String
     abstract val amount: Long
     abstract val closedDate: Instant?
-    abstract val spendings: MutableSet<T>
+    abstract val spendings: Set<T>
     abstract val deleted: Boolean
+    abstract val createdDate: Instant
+    abstract val modifiedDate: Instant?
 }
 
-data class ExpenseDto(
+data class InputExpenseDto(
     override val uuid: String,
     override val description: String,
     override val category: String,
     override val amount: Long,
     override val closedDate: Instant?,
-    override val spendings: MutableSet<SpendingDto>,
+    override val spendings: Set<SpendingDto>,
     override val deleted: Boolean,
+    override val createdDate: Instant,
+    override val modifiedDate: Instant?,
     val clientVersion: Long
 ) : Expense<SpendingDto>() {
 
     fun toExpenseEntity(
         accountId: String,
         userId: String,
-        serverVersion: Long,
-        createdDate: Instant,
-        description: String = this.description
+        description: String = this.description,
+        serverVersion: Long
     ) =
         ExpenseEntity(
             accountId = accountId,
@@ -50,9 +53,22 @@ data class ExpenseDto(
             createdBy = userId,
             createdDate = createdDate,
             modifiedBy = null,
-            modifiedDate = null
+            modifiedDate = modifiedDate
         )
 }
+
+data class OutputExpenseDto(
+    override val uuid: String,
+    override val description: String,
+    override val category: String,
+    override val amount: Long,
+    override val closedDate: Instant?,
+    override val spendings: Set<SpendingDto>,
+    override val deleted: Boolean,
+    override val createdDate: Instant,
+    override val modifiedDate: Instant?,
+    val serverVersion: Long
+) : Expense<SpendingDto>()
 
 @Entity
 @Table(name = "EXPENSES")
@@ -83,13 +99,25 @@ class ExpenseEntity(
     // FIXME: add @CreatedBy
     val createdBy: String,
 
-    // FIXME: add @CreatedDate
-    val createdDate: Instant,
+    override val createdDate: Instant,
 
     // FIXME: add @LastModifiedBy
     var modifiedBy: String?,
 
-    // FIXME: add @LastModifiedDate
-    var modifiedDate: Instant?
+    override var modifiedDate: Instant?
 
-) : Expense<SpendingEntity>()
+) : Expense<SpendingEntity>() {
+
+    fun toOutputExpenseDto() = OutputExpenseDto(
+        uuid = uuid,
+        description = description,
+        category = category,
+        amount = amount,
+        closedDate = closedDate,
+        spendings = spendings.map { it.toSpendingDto() }.toSet(),
+        deleted = deleted,
+        createdDate = createdDate,
+        modifiedDate = modifiedDate,
+        serverVersion = serverVersion
+    )
+}
