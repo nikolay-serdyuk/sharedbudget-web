@@ -1,5 +1,6 @@
 package sharedbudget
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import sharedbudget.entities.ExpenseEntity
@@ -18,7 +19,8 @@ import kotlin.random.Random
 class Service(
     private val accountResolver: AccountResolver,
     private val expensesRepository: ExpensesRepository,
-    private val locks: Locks
+    private val locks: Locks,
+    private val mapper: ObjectMapper
 ) {
 
     @Transactional(readOnly = true)
@@ -76,7 +78,7 @@ class Service(
             ?: throw NotFoundException("Expense uuid == ${dto.uuid} is not found")
 
         if (dto.clientVersion <= entity.serverVersion) {
-            throw ConflictException(entity)
+            throw ConflictException(mapper.writeValueAsString(entity.toOutputExpenseDto()))
         }
 
         with(entity) {

@@ -1,5 +1,6 @@
 package sharedbudget
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.javafaker.Faker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -24,7 +25,8 @@ class ServiceTest @Autowired constructor(
     private val locks: Locks,
     private val accountResolver: AccountResolver,
     private val expensesRepository: ExpensesRepository,
-    private val spendingsRepository: SpendingsRepository
+    private val spendingsRepository: SpendingsRepository,
+    private val mapper: ObjectMapper
 ) {
     private val faker = Faker()
 
@@ -146,10 +148,10 @@ class ServiceTest @Autowired constructor(
     @Test
     fun `check ConflictException is thrown when patching an entity with old data`() {
         val uuid = UUID.randomUUID().toString()
-        val initialExpenseDto = expenseDto {
+        val initialInputExpenseDto = expenseDto {
             this.uuid = uuid
         }
-        service.postExpenses(listOf(initialExpenseDto))
+        val initialOutputExpenseDto = service.postExpenses(listOf(initialInputExpenseDto)).single()
 
         val updatedExpenseDto = expenseDto {
             this.uuid = uuid
@@ -157,6 +159,7 @@ class ServiceTest @Autowired constructor(
         }
         assertThatThrownBy { service.putExpenses(listOf(updatedExpenseDto)) }
             .isInstanceOf(ConflictException::class.java)
+            .hasMessage(mapper.writeValueAsString(initialOutputExpenseDto))
     }
 
     @Test
