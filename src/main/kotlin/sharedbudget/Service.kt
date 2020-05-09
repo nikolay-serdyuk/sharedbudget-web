@@ -96,13 +96,13 @@ class Service(
         return entity
     }
 
-    private fun postfix() = " (${accountResolver.userId}-${String.format("%x", Random.nextInt(1000, 9999))})"
+    private fun postfix() = " (${accountResolver.userId}-${randomHex()})"
+    private fun randomHex() = String.format("%x", Random.nextInt(1000, 9999))
 
     private fun Iterable<SpendingDto>.toSpendingEntities(
         owner: ExpenseEntity,
         createdBy: String
-    ) =
-        map { spending -> spending.toSpendingEntity(owner, createdBy) }
+    ) = map { spending -> spending.toSpendingEntity(owner, createdBy) }
 
     private fun findOneByAccountIdAndDescriptionAndCreatedDate(
         accountId: String,

@@ -39,22 +39,21 @@ data class InputExpenseDto(
         userId: String,
         description: String = this.description,
         serverVersion: Long
-    ) =
-        ExpenseEntity(
-            accountId = accountId,
-            uuid = uuid,
-            description = description,
-            category = category,
-            amount = amount,
-            closedDate = null,
-            spendings = mutableSetOf(),
-            deleted = deleted,
-            serverVersion = serverVersion,
-            createdBy = userId,
-            createdDate = createdDate,
-            modifiedBy = null,
-            modifiedDate = modifiedDate
-        )
+    ) = ExpenseEntity(
+        accountId = accountId,
+        uuid = uuid,
+        description = description,
+        category = category,
+        amount = amount,
+        closedDate = null,
+        spendings = mutableSetOf(),
+        deleted = deleted,
+        serverVersion = serverVersion,
+        createdBy = userId,
+        createdDate = createdDate,
+        modifiedBy = null,
+        modifiedDate = modifiedDate
+    )
 }
 
 data class OutputExpenseDto(
