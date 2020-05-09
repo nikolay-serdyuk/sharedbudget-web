@@ -31,7 +31,7 @@ class Locks(private val hazelcastInstance: HazelcastInstance) {
     fun <T : Any> retryWithLock(accountId: String, block: () -> T): T =
         retryTemplate.execute<T, Exception> { withLock(accountId, block) }
 
-    internal fun <T : Any> withLock(accountId: String, block: () -> T?): T? {
+    internal fun <T : Any> withLock(accountId: String, block: () -> T): T {
         lock(accountId)
         try {
             return block()
